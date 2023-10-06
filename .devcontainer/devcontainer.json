@@ -1,0 +1,20 @@
+{
+    "name": "manage-life",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspaces/manage-life",
+    "customizations": {
+        "vscode": {
+          "settings": {
+            "terminal.integrated.defaultProfile.linux": "zsh"
+          },
+          "extensions": [
+			"EditorConfig.EditorConfig",
+			"GitHub.copilot",
+			"golang.Go",
+			"golang.go"
+		]
+        }
+    },
+    "forwardPorts": [4000]
+}

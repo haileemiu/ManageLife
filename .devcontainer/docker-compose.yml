@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: '.'
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/workspaces/manage-life:cached
+    command: sleep infinity
+    networks:
+      - backend
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ass_app_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    networks:
+      - backend
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+networks:
+  backend: {}
+
+volumes:
+  postgres-data: {}
