@@ -1,0 +1,13 @@
+{
+  "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "ent/{enttest,hook,migrate,predicate,runtime}/": true,
+      "ent/{client,ent,*_create,*_delete,*_query,*_update,mutation,runtime,tx}.go": true,
+      "ent/{task}*": true
+  }
+}
