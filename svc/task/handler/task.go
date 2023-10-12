@@ -8,6 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/haileemiu/manage-life/ent"
+	"github.com/haileemiu/manage-life/pkg/res"
+	"github.com/haileemiu/manage-life/svc/task/model"
 )
 
 type Task struct {
@@ -39,11 +41,23 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t Task) create(w http.ResponseWriter, r *http.Request) {
+	req := model.TaskCreateRequest{}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	if ok, errs := req.Validate(); !ok {
+		res.NewValidationErrorResponse(errs).Send(w)
+		return
+	}
+
 	task, err := t.ent.Task.Create().
-		SetTitle("hard code title").
-		SetNotes("hard code notes").
-		SetIsTimeSenstive(true).
-		SetIsImportant(false).
+		SetTitle(req.Title).
+		SetNotes(req.Notes).
+		SetIsTimeSenstive(req.IsTimeSenstive).
+		SetIsImportant(req.IsImportant).
 		Save(r.Context())
 	if err != nil {
 		log.Println(err)
