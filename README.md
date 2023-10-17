@@ -24,7 +24,7 @@ fetch('http://localhost:4000/api/tasks', {
 
 ## Packages Using
 
-- https://github.com/go-chi/chi
+- [Chi Router](https://github.com/go-chi/chi)
 - go ent
   - `go generate ./..`
   - `go run -mod=mod entgo.io/ent/cmd/ent new Task`

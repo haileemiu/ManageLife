@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/haileemiu/manage-life/ent"
+	"github.com/haileemiu/manage-life/ent/task"
 	"github.com/haileemiu/manage-life/pkg/res"
 	"github.com/haileemiu/manage-life/svc/task/model"
 )
@@ -72,7 +74,9 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Not Implemented")
+	taskID, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	task, _ := t.ent.Task.Query().Where(task.ID(taskID)).Only(r.Context())
+	json.NewEncoder(w).Encode(task)
 }
 
 func (t Task) update(w http.ResponseWriter, r *http.Request) {
