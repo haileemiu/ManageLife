@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -116,5 +115,11 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (t Task) delete(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Not Implemented")
+	taskID, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	err := t.ent.Task.DeleteOneID(taskID).Exec(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// TODO: success response
 }
