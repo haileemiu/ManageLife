@@ -38,13 +38,17 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle error -N
 	// TODO: set response encoding -N
 	// TODO: convert from ent model to task model -N
-	json.NewEncoder(w).Encode(tasks)
+
+	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 }
 
 func (t Task) create(w http.ResponseWriter, r *http.Request) {
 	req := model.TaskCreateRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
@@ -69,22 +73,39 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle error
 	// TODO: set response encoding
 	// TODO: convert from ent model to task model
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 }
 
 func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
-	// TODO: both error handling
-	taskID, _ := strconv.Atoi(chi.URLParam(r, "id"))
-	task, _ := t.ent.Task.Query().Where(task.ID(taskID)).Only(r.Context())
-	json.NewEncoder(w).Encode(task)
+	taskID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	task, err := t.ent.Task.Query().Where(task.ID(taskID)).Only(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 }
 
 func (t Task) update(w http.ResponseWriter, r *http.Request) {
-	taskID, _ := strconv.Atoi(chi.URLParam(r, "id"))
-
-	req := model.TaskCreateRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
+	taskID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	req := model.TaskCreateRequest{}
+
+	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
@@ -94,7 +115,7 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, _ := t.ent.Task.UpdateOneID(taskID).
+	task, err := t.ent.Task.UpdateOneID(taskID).
 		SetTitle(req.Title).
 		SetNotes(req.Notes).
 		SetIsImportant(req.IsImportant).
@@ -111,13 +132,21 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle error
 	// TODO: set response encoding
 	// TODO: convert from ent model to task model
-	json.NewEncoder(w).Encode(task)
+	if err := json.NewEncoder(w).Encode(task); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
 }
 
 func (t Task) delete(w http.ResponseWriter, r *http.Request) {
-	taskID, _ := strconv.Atoi(chi.URLParam(r, "id"))
-	err := t.ent.Task.DeleteOneID(taskID).Exec(r.Context())
+	taskID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err = t.ent.Task.DeleteOneID(taskID).Exec(r.Context()); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
