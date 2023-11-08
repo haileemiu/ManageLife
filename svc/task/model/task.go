@@ -38,7 +38,7 @@ func (tcr TaskCreateRequest) Validate() (bool, map[string][]string) {
 		errs["title"] = append(errs["title"], "title must be between 3 and 120 characters")
 	}
 
-	// put other validations here...
+	// TODO: put other validations here
 
 	return len(errs) == 0, errs
 }

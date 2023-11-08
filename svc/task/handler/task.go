@@ -35,11 +35,21 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// TODO: handle error -N
-	// TODO: set response encoding -N
-	// TODO: convert from ent model to task model -N
 
-	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+	var taskList []model.TaskItemResponse
+	for _, entModel := range tasks {
+		task := model.TaskItemResponse{
+			Title:          entModel.Title,
+			Notes:          entModel.Notes,
+			IsTimeSenstive: entModel.IsTimeSenstive,
+			IsImportant:    entModel.IsImportant,
+			RemindAt:       entModel.RemindAt,
+			DueAt:          entModel.DueAt,
+		}
+		taskList = append(taskList, task)
+	}
+
+	if err := json.NewEncoder(w).Encode(taskList); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
@@ -70,9 +80,6 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: handle error
-	// TODO: set response encoding
-	// TODO: convert from ent model to task model
 	if err := json.NewEncoder(w).Encode(task); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -91,7 +98,19 @@ func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(task); err != nil {
+	// TODO: convert from ent model to task model
+	taskItem := model.TaskItemResponse{
+		ID:             task.ID,
+		Title:          task.Title,
+		Notes:          task.Notes,
+		IsTimeSenstive: task.IsTimeSenstive,
+		IsImportant:    task.IsImportant,
+		RemindAt:       task.RemindAt,
+		DueAt:          task.DueAt,
+	}
+
+	// TODO: set response encoding
+	if err := json.NewEncoder(w).Encode(taskItem); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}

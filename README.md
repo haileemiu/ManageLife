@@ -53,3 +53,7 @@ func main() {
 }
 
 ```
+
+## Troubleshooting
+
+- container terminal not as expected: ctrl + shft + p --> rebuild
