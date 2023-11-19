@@ -30,10 +30,34 @@ func (t Task) Routes(r chi.Router) {
 }
 
 func (t Task) list(w http.ResponseWriter, r *http.Request) {
-	tasks, err := t.ent.Task.Query().All(r.Context())
+	defaultPage := 1
+	defaultPageSize := 10
+
+	page := r.URL.Query().Get("page")
+	pageSize := r.URL.Query().Get("pageSize")
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil || pageInt <= 0 {
+			pageInt = defaultPage
+	}
+
+	pageSizeInt, err := strconv.Atoi(pageSize)
+	if err != nil || pageSizeInt <= 0 {
+			pageSizeInt = defaultPageSize
+	}
+
+	offset := (pageInt - 1) * pageSizeInt
+
+	// TODO: return page & pagesize (specifically for defaults). metadata property
+	tasks, err := t.ent.Task.Query().
+			Limit(pageSizeInt).
+			Offset(offset).
+			Order(ent.Asc("created_at")).
+			All(r.Context())
+
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+			http.Error(w, "Failed to retrieve tasks", http.StatusInternalServerError)
+			return
 	}
 
 	var taskList []model.TaskItemResponse
