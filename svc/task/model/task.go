@@ -27,6 +27,15 @@ type TaskCreateRequest struct {
 	DueAt          time.Time `json:"dueAt"`
 }
 
+type TaskUpdateRequest struct {
+	Title          string    `json:"title"`
+	Notes          string    `json:"notes"`
+	IsTimeSenstive bool      `json:"isTimeSensitve"`
+	IsImportant    bool      `json:"isImportant"`
+	RemindAt       time.Time `json:"remindAt"`
+	DueAt          time.Time `json:"dueAt"`
+}
+
 func (tcr TaskCreateRequest) Validate() (bool, map[string][]string) {
 	errs := map[string][]string{}
 

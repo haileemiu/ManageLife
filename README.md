@@ -5,8 +5,10 @@ My personal task management (aka "Adulting") application.
 ## Development Notes
 
 - `go run .`
+- http://localhost:4000/api/tasks/
 - Rebuild = ctrl + shft + p; usually only when change .devcontainer files
 - `go mod tidy`
+
 ```js
 fetch('http://localhost:4000/api/tasks', {
   method: 'POST',

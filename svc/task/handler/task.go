@@ -39,6 +39,7 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 	var taskList []model.TaskItemResponse
 	for _, entModel := range tasks {
 		task := model.TaskItemResponse{
+			ID: 						entModel.ID,
 			Title:          entModel.Title,
 			Notes:          entModel.Notes,
 			IsTimeSenstive: entModel.IsTimeSenstive,
@@ -68,7 +69,7 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := t.ent.Task.Create().
+	entTask, err := t.ent.Task.Create().
 		SetTitle(req.Title).
 		SetNotes(req.Notes).
 		SetIsTimeSenstive(req.IsTimeSenstive).
@@ -78,6 +79,16 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	task := model.TaskItemResponse{
+		ID:             entTask.ID,
+		Title:          entTask.Title,
+		Notes:          entTask.Notes,
+		IsTimeSenstive: entTask.IsTimeSenstive,
+		IsImportant:    entTask.IsImportant,
+		RemindAt:       entTask.RemindAt,
+		DueAt:          entTask.DueAt,
 	}
 
 	if err := json.NewEncoder(w).Encode(task); err != nil {
@@ -92,13 +103,13 @@ func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	task, err := t.ent.Task.Query().Where(task.ID(taskID)).Only(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// TODO: convert from ent model to task model
 	taskItem := model.TaskItemResponse{
 		ID:             task.ID,
 		Title:          task.Title,
@@ -109,7 +120,6 @@ func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 		DueAt:          task.DueAt,
 	}
 
-	// TODO: set response encoding
 	if err := json.NewEncoder(w).Encode(taskItem); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -129,28 +139,36 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ok, errs := req.Validate(); !ok {
-		res.NewValidationErrorResponse(errs).Send(w)
-		return
-	}
+	// TODO: a different validate for PUT? 
+	// if ok, errs := req.Validate(); !ok {
+	// 	res.NewValidationErrorResponse(errs).Send(w)
+	// 	return
+	// }
 
-	task, err := t.ent.Task.UpdateOneID(taskID).
+	entTask, err := t.ent.Task.UpdateOneID(taskID).
 		SetTitle(req.Title).
 		SetNotes(req.Notes).
 		SetIsImportant(req.IsImportant).
 		SetIsTimeSenstive(req.IsImportant).
 		SetDueAt(req.DueAt).
 		SetRemindAt(req.RemindAt).
-		// TODO: update at
+		// TODO: update at?
 		Save(r.Context())
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// TODO: handle error
-	// TODO: set response encoding
-	// TODO: convert from ent model to task model
+
+	task := model.TaskItemResponse{
+		Title:          entTask.Title,
+		Notes:          entTask.Notes,
+		IsTimeSenstive: entTask.IsTimeSenstive,
+		IsImportant:    entTask.IsImportant,
+		RemindAt:       entTask.RemindAt,
+		DueAt:          entTask.DueAt,
+	}
+
 	if err := json.NewEncoder(w).Encode(task); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -169,5 +187,7 @@ func (t Task) delete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// TODO: success response
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Task deleted successfully"))
 }
