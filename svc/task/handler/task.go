@@ -17,6 +17,10 @@ type Task struct {
 	ent *ent.Client
 }
 
+type DeleteResponse struct {
+	Message string `json:"message"`
+}
+
 func New(entClient *ent.Client) *Task {
 	return &Task{ent: entClient}
 }
@@ -75,7 +79,7 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(taskList); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		log.Printf("Error occurred while encoding: %v", err)
 		return
 	}
 }
@@ -99,8 +103,8 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 		SetIsTimeSenstive(req.IsTimeSenstive).
 		SetIsImportant(req.IsImportant).
 		Save(r.Context())
+
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -116,7 +120,7 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(task); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		log.Printf("Error occurred while encoding: %v", err)
 		return
 	}
 }
@@ -124,7 +128,7 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 	taskID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
@@ -145,7 +149,7 @@ func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(taskItem); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		log.Printf("Error occurred while encoding: %v", err)
 		return
 	}
 }
@@ -153,13 +157,13 @@ func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 func (t Task) update(w http.ResponseWriter, r *http.Request) {
 	taskID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 	req := model.TaskCreateRequest{}
 
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		log.Printf("Error occurred while decoding: %v", err)
 		return
 	}
 
@@ -176,10 +180,9 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 		SetIsTimeSenstive(req.IsImportant).
 		SetDueAt(req.DueAt).
 		SetRemindAt(req.RemindAt).
-		// TODO: update at?
 		Save(r.Context())
+
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -194,7 +197,7 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(task); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		log.Printf("Error occurred while encoding: %v", err)
 		return
 	}
 }
@@ -202,16 +205,37 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 func (t Task) delete(w http.ResponseWriter, r *http.Request) {
 	taskID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "bad request", http.StatusBadRequest) // Case: user sends non-integer
 		return
 	}
 
-	if err = t.ent.Task.DeleteOneID(taskID).Exec(r.Context()); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	err = t.ent.Task.DeleteOneID(taskID).Exec(r.Context())// Case: Item exists & successfully deleted
+
+	if err != nil {
+			if ent.IsNotFound(err) { // Case: Item does not exist
+					w.WriteHeader(http.StatusNoContent)
+					return
+			}
+			http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+			return
 	}
+
+	response := DeleteResponse{
+			Message: "Task deleted successfully",
+	}
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Task deleted successfully"))
+	_, err = w.Write(jsonResponse)
+	if err != nil {
+			http.Error(w, "Failed to write response", http.StatusInternalServerError)
+			return
+	}
 }
