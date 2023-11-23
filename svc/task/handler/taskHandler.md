@@ -1,18 +1,4 @@
-package handler
-
-import (
-	"encoding/json"
-	"log"
-	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/haileemiu/manage-life/ent"
-	"github.com/haileemiu/manage-life/ent/task"
-	"github.com/haileemiu/manage-life/pkg/res"
-	"github.com/haileemiu/manage-life/svc/task/model"
-)
-
+```go
 type Task struct {
 	ent *ent.Client
 }
@@ -25,6 +11,7 @@ func New(entClient *ent.Client) *Task {
 	return &Task{ent: entClient}
 }
 
+// Routes like this (not nested) to make testing easier.
 func (t Task) Routes(r chi.Router) {
 	r.Get("/", t.list)
 	r.Post("/", t.create)
@@ -33,6 +20,7 @@ func (t Task) Routes(r chi.Router) {
 	r.Delete("/{id}", t.delete)
 }
 
+// Lower case = private
 func (t Task) list(w http.ResponseWriter, r *http.Request) {
 	defaultPage := 1
 	defaultPageSize := 10
@@ -78,6 +66,7 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 		taskList = append(taskList, task)
 	}
 
+  // Encode so send back json from API call
 	if err := json.NewEncoder(w).Encode(taskList); err != nil {
 		log.Printf("Error occurred while encoding: %v", err)
 		return
@@ -87,8 +76,10 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 func (t Task) create(w http.ResponseWriter, r *http.Request) {
 	req := model.TaskCreateRequest{}
 
+  // Decode to convert and ensure JSON matches my data model
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+    // Bad request b/c if decode failed then user sent invalid data
+		http.Error(w, "bad request", http.StatusBadRequest)  
 		return
 	}
 
@@ -102,6 +93,7 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 		SetNotes(req.Notes).
 		SetIsTimeSenstive(req.IsTimeSenstive).
 		SetIsImportant(req.IsImportant).
+    // Don't forget to save
 		Save(r.Context())
 
 	if err != nil {
@@ -120,6 +112,7 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(task); err != nil {
+    // By this stage, part of the response has already been sent so a status error will not work.
 		log.Printf("Error occurred while encoding: %v", err)
 		return
 	}
@@ -239,3 +232,5 @@ func (t Task) delete(w http.ResponseWriter, r *http.Request) {
 			return
 	}
 }
+
+```
