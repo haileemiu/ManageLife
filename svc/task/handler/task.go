@@ -42,32 +42,32 @@ func (t Task) list(w http.ResponseWriter, r *http.Request) {
 
 	pageInt, err := strconv.Atoi(page)
 	if err != nil || pageInt <= 0 {
-			pageInt = defaultPage
+		pageInt = defaultPage
 	}
 
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil || pageSizeInt <= 0 {
-			pageSizeInt = defaultPageSize
+		pageSizeInt = defaultPageSize
 	}
 
 	offset := (pageInt - 1) * pageSizeInt
 
 	// TODO: return page & pagesize (specifically for defaults). metadata property
 	tasks, err := t.ent.Task.Query().
-			Limit(pageSizeInt).
-			Offset(offset).
-			Order(ent.Asc("created_at")).
-			All(r.Context())
+		Limit(pageSizeInt).
+		Offset(offset).
+		Order(ent.Asc("created_at")).
+		All(r.Context())
 
 	if err != nil {
-			http.Error(w, "Failed to retrieve tasks", http.StatusInternalServerError)
-			return
+		http.Error(w, "Failed to retrieve tasks", http.StatusInternalServerError)
+		return
 	}
 
 	var taskList []model.TaskItemResponse
 	for _, entModel := range tasks {
 		task := model.TaskItemResponse{
-			ID: 						entModel.ID,
+			ID:             entModel.ID,
 			Title:          entModel.Title,
 			Notes:          entModel.Notes,
 			IsTimeSenstive: entModel.IsTimeSenstive,
@@ -119,6 +119,7 @@ func (t Task) create(w http.ResponseWriter, r *http.Request) {
 		DueAt:          entTask.DueAt,
 	}
 
+	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(task); err != nil {
 		log.Printf("Error occurred while encoding: %v", err)
 		return
@@ -133,7 +134,10 @@ func (t Task) getByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task, err := t.ent.Task.Query().Where(task.ID(taskID)).Only(r.Context())
-	if err != nil {
+	if ent.IsNotFound(err) {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -167,7 +171,7 @@ func (t Task) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: a different validate for PUT? 
+	// TODO: a different validate for PUT?
 	// if ok, errs := req.Validate(); !ok {
 	// 	res.NewValidationErrorResponse(errs).Send(w)
 	// 	return
@@ -209,25 +213,25 @@ func (t Task) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.ent.Task.DeleteOneID(taskID).Exec(r.Context())// Case: Item exists & successfully deleted
+	err = t.ent.Task.DeleteOneID(taskID).Exec(r.Context()) // Case: Item exists & successfully deleted
 
 	if err != nil {
-			if ent.IsNotFound(err) { // Case: Item does not exist
-					w.WriteHeader(http.StatusNoContent)
-					return
-			}
-			http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+		if ent.IsNotFound(err) { // Case: Item does not exist
+			w.WriteHeader(http.StatusNoContent)
 			return
+		}
+		http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+		return
 	}
 
 	response := DeleteResponse{
-			Message: "Task deleted successfully",
+		Message: "Task deleted successfully",
 	}
 
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -235,7 +239,7 @@ func (t Task) delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(jsonResponse)
 	if err != nil {
-			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-			return
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
 	}
 }

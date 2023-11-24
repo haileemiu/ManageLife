@@ -1,4 +1,5 @@
 ```go
+// This is like the objects in C#
 type Task struct {
 	ent *ent.Client
 }
@@ -7,6 +8,7 @@ type DeleteResponse struct {
 	Message string `json:"message"`
 }
 
+// Essentially the "constructor" for the "class" in C#
 func New(entClient *ent.Client) *Task {
 	return &Task{ent: entClient}
 }
@@ -20,6 +22,7 @@ func (t Task) Routes(r chi.Router) {
 	r.Delete("/{id}", t.delete)
 }
 
+// Each of these are methods
 // Lower case = private
 func (t Task) list(w http.ResponseWriter, r *http.Request) {
 	defaultPage := 1

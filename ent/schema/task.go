@@ -21,6 +21,7 @@ func (Task) Fields() []ent.Field {
 		field.Bool("is_important").Default(false),
 		field.Time("remind_at").Optional(),
 		field.Time("due_at").Optional(),
+		field.Time("completed_at").Optional(),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 	}

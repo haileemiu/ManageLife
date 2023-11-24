@@ -6,8 +6,10 @@ My personal task management (aka "Adulting") application.
 
 - `go run .`
 - http://localhost:4000/api/tasks/
-- Rebuild = ctrl + shft + p; usually only when change .devcontainer files
+- Rebuild = ctrl + shft + p; usually only when **change .devcontainer files**
 - `go mod tidy`
+
+- Use "C:\Users\HaileeMiu\source\repos\ManageLife1" C# project as a reference
 
 ```js
 fetch('http://localhost:4000/api/tasks', {
@@ -23,6 +25,13 @@ fetch('http://localhost:4000/api/tasks', {
 .then(res => res.json())
 .then(console.log)
 ```
+## Notes to save and reference later in the project 
+
+- `dateOnly := time.Date(2023, time.October, 7, 0, 0, 0, 0, time.UTC)`
+
+## Troubleshooting
+
+- container terminal not as expected: ctrl + shft + p --> rebuild
 
 ## Packages Using
 
@@ -32,16 +41,8 @@ fetch('http://localhost:4000/api/tasks', {
   - `go run -mod=mod entgo.io/ent/cmd/ent new Task`
   - `go generate ./ent`
 
-## Notes to save and reference later in the project 
+# Notes
 
-- `dateOnly := time.Date(2023, time.October, 7, 0, 0, 0, 0, time.UTC)`
-
-## API Routs
-
-base = `http://localhost:4000/api/tasks`
-get a list of tasks = `http://localhost:4000/api/tasks/`
-
-## Notes
 ```go
 package main
 
@@ -55,7 +56,7 @@ func main() {
 }
 
 ```
-
-## Troubleshooting
-
-- container terminal not as expected: ctrl + shft + p --> rebuild
+- entClient:
+  - Object Relational Mapper: Manages the relationships of your database
+  - Maps and manages your schema to the db model so that you don't have to
+- Ability to create complicated queries with little work on my side
